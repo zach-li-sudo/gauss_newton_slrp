@@ -1,0 +1,234 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>test_panda</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-10-19"><meta name="DC.source" content="test_panda.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% test myGN on panda images</span>
+<span class="comment">%</span>
+<span class="comment">% Gauss Newton: min (1/4)||XX' - A||_F^2/</span>
+<span class="comment">%</span>
+<span class="comment">% updated 2021-10-09</span>
+close <span class="string">all</span>; clear
+
+<span class="comment">% test panda1 or panda2</span>
+<span class="comment">% im = input('Image 1 or 2: ');</span>
+im = 2;
+<span class="keyword">if</span> isempty(im) || im &gt; 1
+      load <span class="string">Panda2</span>; im = 2;
+<span class="keyword">else</span>, load <span class="string">Panda1</span>; im = 1;
+<span class="keyword">end</span>
+
+M0 = Panda;
+[m,n] = size(M0);
+nrm0 = norm(M0,<span class="string">'fro'</span>)^2;
+fprintf(<span class="string">'image size: m = %i, n = %i\n'</span>,m,n);
+
+<span class="comment">% target rank: e.g., 32 to 128</span>
+k = 64*im;
+
+tol = 5e-3;
+maxit = 100;
+fprintf(<span class="string">'m = %i, n = %i, k = %i, tol = %.e\n\n'</span>,m,n,k,tol)
+
+A = M0*M0';
+nrmA = norm(A,<span class="string">'fro'</span>);
+A = A / nrmA;
+opts.tol = tol;
+
+<span class="comment">% Dimension reduction by SVDS</span>
+tic;
+[U1,S1,V1] = svds(M0,k); <span class="comment">% subset of singular values and vectors, k largest</span>
+M1 = U1*S1*V1';
+fprintf(<span class="string">'SVDs ... '</span>); toc
+
+<span class="comment">% Dimension reduction by yzGN</span>
+tic; X0 = randn(m,k);
+[X2,iter2] = yzGN(A,X0,tol,maxit);
+[U2,~] = qr(X2,0);
+M2 = U2*(U2'*M0); <span class="comment">%</span>
+fprintf(<span class="string">'yzGN ... '</span>); toc
+
+subplot(221); imshow(M0,[]);
+xlabel([<span class="string">'Original Rank '</span> num2str(min(m,n))])
+subplot(222); imshow(M1,[]);
+xlabel([<span class="string">'SVDs Rank '</span> num2str(k)])
+subplot(223); imshow(M2,[]);
+xlabel([<span class="string">'yzGN Rank '</span> num2str(k)])
+shg
+
+<span class="comment">% Dimension reduction by myGN</span>
+<span class="keyword">if</span> exist(<span class="string">'myGN'</span>,<span class="string">'file'</span>)
+    tic;
+    X0 = randn(m,k);
+    [X3,iter3] = myGN(A,X0,tol,maxit);
+    [U3,~] = qr(X3,0);
+    M3 = U3*(U3'*M0);
+    fprintf(<span class="string">'myGN ... '</span>); toc
+    subplot(224); imshow(M3,[]);
+    xlabel([<span class="string">'myGN Rank '</span> num2str(k)])
+<span class="keyword">end</span>
+
+fM = @(M).25*norm(M-M0,<span class="string">'fro'</span>)^2/nrm0;
+rU = @(U)norm(A*U-U*(U'*A*U),<span class="string">'fro'</span>);
+<span class="comment">% more info</span>
+<span class="keyword">if</span> 0 &lt; 1
+    fprintf(<span class="string">'\nSVDs    : fM = %.4e, rU = %.4e\n'</span>,fM(M1),rU(U1));
+    fprintf(<span class="string">'iter %3i: fM = %.4e, rU = %.4e\n'</span>,iter2,fM(M2),rU(U2));
+    <span class="keyword">if</span> exist(<span class="string">'M3'</span>,<span class="string">'var'</span>)
+        fprintf(<span class="string">'iter %3i: fM = %.4e, rU = %.4e\n\n'</span>,iter3,fM(M3),rU(U3));
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">image size: m = 2848, n = 4272
+m = 2848, n = 4272, k = 128, tol = 5e-03
+
+SVDs ... Elapsed time is 8.877659 seconds.
+yzGN ... Elapsed time is 0.836298 seconds.
+myGN ... Elapsed time is 0.926958 seconds.
+
+SVDs    : fM = 6.8525e-04, rU = 2.0127e-15
+iter  17: fM = 6.9546e-04, rU = 2.6227e-05
+iter  17: fM = 6.9597e-04, rU = 2.4974e-05
+
+</pre><img vspace="5" hspace="5" src="test_panda_01.png" style="width:560px;height:420px;" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% test myGN on panda images
+%
+% Gauss Newton: min (1/4)||XX' - A||_F^2/
+%
+% updated 2021-10-09
+close all; clear
+
+% test panda1 or panda2
+% im = input('Image 1 or 2: ');
+im = 2;
+if isempty(im) || im > 1
+      load Panda2; im = 2;
+else, load Panda1; im = 1;
+end
+
+M0 = Panda;
+[m,n] = size(M0);
+nrm0 = norm(M0,'fro')^2;
+fprintf('image size: m = %i, n = %i\n',m,n);
+
+% target rank: e.g., 32 to 128
+k = 64*im;
+
+tol = 5e-3;
+maxit = 100;
+fprintf('m = %i, n = %i, k = %i, tol = %.e\n\n',m,n,k,tol)
+
+A = M0*M0';
+nrmA = norm(A,'fro');
+A = A / nrmA;
+opts.tol = tol;
+
+% Dimension reduction by SVDS
+tic;
+[U1,S1,V1] = svds(M0,k); % subset of singular values and vectors, k largest
+M1 = U1*S1*V1';
+fprintf('SVDs ... '); toc
+
+% Dimension reduction by yzGN
+tic; X0 = randn(m,k);
+[X2,iter2] = yzGN(A,X0,tol,maxit);
+[U2,~] = qr(X2,0);
+M2 = U2*(U2'*M0); % 
+fprintf('yzGN ... '); toc
+
+subplot(221); imshow(M0,[]);
+xlabel(['Original Rank ' num2str(min(m,n))])
+subplot(222); imshow(M1,[]);
+xlabel(['SVDs Rank ' num2str(k)])
+subplot(223); imshow(M2,[]);
+xlabel(['yzGN Rank ' num2str(k)])
+shg
+
+% Dimension reduction by myGN
+if exist('myGN','file')
+    tic; 
+    X0 = randn(m,k);
+    [X3,iter3] = myGN(A,X0,tol,maxit);
+    [U3,~] = qr(X3,0);
+    M3 = U3*(U3'*M0);
+    fprintf('myGN ... '); toc
+    subplot(224); imshow(M3,[]);
+    xlabel(['myGN Rank ' num2str(k)])
+end
+
+fM = @(M).25*norm(M-M0,'fro')^2/nrm0;
+rU = @(U)norm(A*U-U*(U'*A*U),'fro');
+% more info
+if 0 < 1
+    fprintf('\nSVDs    : fM = %.4e, rU = %.4e\n',fM(M1),rU(U1));
+    fprintf('iter %3i: fM = %.4e, rU = %.4e\n',iter2,fM(M2),rU(U2));
+    if exist('M3','var')
+        fprintf('iter %3i: fM = %.4e, rU = %.4e\n\n',iter3,fM(M3),rU(U3));
+    end
+end
+
+##### SOURCE END #####
+--></body></html>
